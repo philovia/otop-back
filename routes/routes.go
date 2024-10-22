@@ -12,15 +12,14 @@ func UserRoutes(app *fiber.App) {
 	//  Public routes
 	app.Post("/api/register", controllers.Register)
 	app.Post("/api/login", controllers.Login)
+	app.Post("/logout", controllers.Logout) // Add this line
 
 	// Protected routes
-	api := app.Group("/api", middleware.Authentication()) // Use JWT middleware
+	admin := app.Group("/admin", middleware.Authentication()) // Use JWT middleware
+	admin.Post("/supplier", controllers.CreateSupplier)
+	admin.Get("/suppliers", controllers.GetAllSuppliers)
+	admin.Get("/suppliers/storeName", controllers.GetSupplierByStoreName)
+	admin.Put("/suppliers/:id", controllers.UpdateSupplier)
+	admin.Delete("/supplier/:id", controllers.DeleteSupplier)
 
-	// Example protected routes (e.g., add/update products)
-	api.Post("/products", middleware.IsSupplier(), controllers.AddProduct)
-	// api.Get("/products", controllers.GetProducts)
-	// api.Put("/products/:id", controllers.UpdateProduct)
-
-	// Logout route
-	api.Post("/logout", controllers.Logout) // Add this line
 }

@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/m/utils" // For JWT validation logic
+	"github.com/m/utils"
 )
 
 // In-memory blacklist to store invalidated tokens
@@ -50,6 +50,11 @@ func Authentication() fiber.Handler {
 				"error": "Unauthorized, invalid token",
 			})
 		}
+		if claims.Role != "admin" {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+				"error": "Forbidden, admin access required",
+			})
+		}
 
 		// Add user info (username and role) to the context
 		c.Locals("username", claims.Username)
@@ -60,29 +65,7 @@ func Authentication() fiber.Handler {
 		return c.Next()
 	}
 }
-
-// IsSupplier middleware to verify if the user is a supplier
-func IsSupplier() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		// Get the role from the request context (set in the Authentication middleware)
-		role := c.Locals("role").(string)
-
-		// Check if the user has the role "supplier"
-		if role != "supplier" {
-			log.Println("Forbidden: User is not a supplier")
-			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-				"error": "Only suppliers can access this resource",
-			})
-		}
-
-		// Proceed if the user is a supplier
-		return c.Next()
-	}
-}
-
-// Logout function to invalidate the token
 func Logout(c *fiber.Ctx) error {
-	// Extract the token from the header (Bearer <token>)
 	authFormHeader := c.Get("Authorization")
 	tokenString := strings.TrimPrefix(authFormHeader, "Bearer ")
 
@@ -91,4 +74,20 @@ func Logout(c *fiber.Ctx) error {
 
 	log.Println("Token invalidated for logout:", tokenString)
 	return c.JSON(fiber.Map{"message": "Logged out successfully"})
+}
+
+func IsAdmin() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		role := c.Locals("role").(string)
+
+		// Check if the user has the role "admin"
+		if role != "admin" {
+			log.Println("Forbidden: User is not an admin")
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+				"error": "Only admins can access this resource",
+			})
+		}
+
+		return c.Next()
+	}
 }

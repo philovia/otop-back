@@ -2,7 +2,6 @@ package models
 
 import "gorm.io/gorm"
 
-// User struct na nagsisilbing template para sa database schema ng users
 type User struct {
 	gorm.Model
 	ID       int    `json:"id"`

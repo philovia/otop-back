@@ -3,7 +3,8 @@ package controllers
 import (
 	"log"
 	"net/http"
-	"path/filepath"
+
+	// "path/filepath"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -39,17 +40,17 @@ func AddProduct(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Invalid stock"})
 	}
 
-	// Get the file from the form field
-	file, err := c.FormFile("image")
-	if err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Cannot process image"})
-	}
+	// // Get the file from the form field
+	// file, err := c.FormFile("image")
+	// if err != nil {
+	// 	return c.Status(http.StatusBadRequest).JSON(fiber.Map{"error": "Cannot process image"})
+	// }
 
-	// Save the file temporarily in the uploads folder
-	filePath := filepath.Join("./uploads", file.Filename)
-	if err := c.SaveFile(file, filePath); err != nil {
-		return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Cannot save image"})
-	}
+	// // Save the file temporarily in the uploads folder
+	// filePath := filepath.Join("./uploads", file.Filename)
+	// if err := c.SaveFile(file, filePath); err != nil {
+	// 	return c.Status(http.StatusInternalServerError).JSON(fiber.Map{"error": "Cannot save image"})
+	// }
 
 	// Get user ID (Supplier) from JWT
 	userIDInterface := c.Locals("userID")
@@ -67,8 +68,8 @@ func AddProduct(c *fiber.Ctx) error {
 		Category:    category,
 		Price:       price,
 		Stock:       stock,
-		FilePath:    filePath, // Store the local file path in the database
-		UserID:      userID,
+		// FilePath:    filePath, // Store the local file path in the database
+		UserID: userID,
 	}
 
 	// Save product to the database
