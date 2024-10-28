@@ -1,31 +1,47 @@
 package controllers
 
 import (
+	// "fmt"
+
+	"fmt"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/m/database"
 	"github.com/m/models"
+	"github.com/m/utils"
+	"gorm.io/gorm"
+	// "golang.org/x/crypto/bcrypt"
 )
 
-// CreateSupplier creates a new supplier (Admin only)
 func CreateSupplier(c *fiber.Ctx) error {
 	var supplier models.Supplier
 
-	// Parse request body
+	// Parse the request body for supplier details (email, password, etc.)
 	if err := c.BodyParser(&supplier); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Cannot parse JSON",
+			"error": "Invalid request body",
 		})
 	}
 
-	// Save the supplier in the database
+	// Hash the password before saving (you should already have a function for this)
+	hashedPassword, err := utils.HashPassword(supplier.Password)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Error hashing password",
+		})
+	}
+	supplier.Password = hashedPassword
+	supplier.Role = "supplier"
+
 	if err := database.DB.Create(&supplier).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Cannot create supplier",
+			"error": "Could not create supplier account",
 		})
 	}
-
-	// Return the created supplier
-	return c.Status(201).JSON(supplier)
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"message":  "Supplier account created successfully",
+		"supplier": supplier,
+	})
 }
 
 // UpdateSupplier updates an existing supplier (Admin only)
@@ -77,11 +93,9 @@ func DeleteSupplier(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "Supplier deleted successfully"})
 }
 
-// GetAllSuppliers fetches all suppliers (Admin only)
 func GetAllSuppliers(c *fiber.Ctx) error {
 	var suppliers []models.Supplier
 
-	// Fetch all suppliers
 	if err := database.DB.Find(&suppliers).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Cannot fetch suppliers",
@@ -91,15 +105,88 @@ func GetAllSuppliers(c *fiber.Ctx) error {
 	return c.JSON(suppliers)
 }
 
-func GetSupplierByStoreName(c *fiber.Ctx) error {
-	storeName := c.Query("storeName")
+func GetSupplierByEmail(c *fiber.Ctx) error {
+	email := c.Params("email")
 
 	var supplier models.Supplier
-	if err := database.DB.Where("store_name = ?", storeName).First(&supplier).Error; err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"error": "Supplier not found",
+
+	if err := database.DB.Where("LOWER(email) = LOWER(?)", email).First(&supplier).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"message": "Supplier not found for the given email",
+			})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Could not retrieve supplier",
 		})
 	}
 
-	return c.JSON(supplier)
+	return c.Status(fiber.StatusOK).JSON(supplier)
+}
+func GetSupplierByStoreName(c *fiber.Ctx) error {
+	storeName := c.Params("storeName")
+
+	var supplier models.Supplier
+	fmt.Println("Searching for supplier with store name:", storeName)
+
+	if err := database.DB.Where("LOWER(store_name) = LOWER(?)", storeName).First(&supplier).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"message": "Supplier not found for the given store name",
+			})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Could not retrieve supplier",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(supplier)
+}
+
+func SupplierLogin(c *fiber.Ctx) error {
+	var loginRequest struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	// Parse the login request body (email and password)
+	if err := c.BodyParser(&loginRequest); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Invalid request format",
+		})
+	}
+
+	var supplier models.User
+	// Fetch the supplier from the database by email and ensure the role is 'supplier'
+	if err := database.DB.Where("email = ? AND role = ?", loginRequest.Email, "supplier").First(&supplier).Error; err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Invalid email or password",
+		})
+	}
+
+	// Compare the hashed password with the provided password
+	if !utils.CheckPasswordHash(loginRequest.Password, supplier.Password) {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Invalid email or password",
+		})
+	}
+
+	// Generate a JWT token for the supplier with userID, email, and role
+	token, err := utils.GenerateJWT(supplier.Email, supplier.Role, uint(supplier.ID))
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Could not generate token",
+		})
+	}
+
+	// Return the token and supplier information
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Supplier logged in successfully",
+		"token":   token,
+		"user": fiber.Map{
+			"id":    supplier.ID,
+			"email": supplier.Email,
+			"role":  supplier.Role,
+		},
+	})
 }

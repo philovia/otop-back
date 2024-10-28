@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -8,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 
 	"github.com/m/database"
 	"github.com/m/models"
@@ -78,4 +80,65 @@ func AddProduct(c *fiber.Ctx) error {
 	}
 
 	return c.Status(http.StatusCreated).JSON(product)
+}
+func UpdateProduct(c *fiber.Ctx) error {
+	id := c.Params("id")
+
+	var product models.Product
+	if err := database.DB.First(&product, id).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "Product not found",
+		})
+	}
+
+	if err := c.BodyParser(&product); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Cannot parse JSON",
+		})
+	}
+	if err := database.DB.Save(&product).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Cannot update supplier",
+		})
+	}
+
+	return c.JSON(product)
+
+}
+
+func GetProductByName(c *fiber.Ctx) error {
+	name := c.Params("name")
+
+	var product models.Product
+	fmt.Println("Searching for product with name:", name)
+
+	if err := database.DB.Where("name", name).First(&product).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"message": "Product name not found in the given name",
+			})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Could not retrieve product name",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(product)
+}
+
+func DeleteProduct(c *fiber.Ctx) error {
+	id := c.Params("id")
+
+	var product models.Product
+	if err := database.DB.First(&product, id).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": " Product bot found",
+		})
+	}
+	if err := database.DB.Delete(&product).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Cannot delete the product",
+		})
+	}
+	return c.JSON(fiber.Map{"message": "Product delete successfully"})
 }

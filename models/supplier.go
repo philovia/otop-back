@@ -4,11 +4,10 @@ import "gorm.io/gorm"
 
 type Supplier struct {
 	gorm.Model
-	ID          int    `json:"id"`
-	StoreName   string `json:"storename"`
+	StoreName   string `json:"store_name" gorm:"unique"`
 	Email       string `json:"email"`
-	PhoneNumber string `json:"phonenumber"`
+	PhoneNumber string `json:"phone_number"`
 	Address     string `json:"address"`
 	Password    string `json:"password"`
-	// Role     string `json:"role"`
+	Role        string `gorm:"default:'supplier'"`
 }
