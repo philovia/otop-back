@@ -12,8 +12,8 @@ func UserRoutes(app *fiber.App) {
 	//  Public routes
 	app.Post("/api/register", controllers.Register)
 	app.Post("/api/login", controllers.Login)
-	app.Post("/logout", controllers.Logout)
 
+	app.Post("/logout", middleware.Authentication(), controllers.Logout)
 	// Protected routes
 	admin := app.Group("/admin", middleware.Authentication(), middleware.IsAdmin())
 	admin.Post("/supplier", controllers.CreateSupplier)

@@ -17,6 +17,15 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+// type TokenBlacklist struct {
+// 	blacklist map[string]time.Time
+// 	mu        sync.Mutex
+// }
+
+// var blacklistedTokens = TokenBlacklist{
+// 	blacklist: make(map[string]time.Time),
+// }
+
 func GenerateJWT(username, role string, userID uint) (string, error) {
 	expirationTime := time.Now().Add(24 * time.Hour)
 
@@ -78,3 +87,16 @@ func CheckPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }
+
+// func BlacklistToken(token string) {
+// 	blacklistedTokens.mu.Lock()
+// 	defer blacklistedTokens.mu.Unlock()
+// 	blacklistedTokens.blacklist[token] = time.Now()
+// }
+
+// func IsTokenBlacklisted(token string) bool {
+// 	blacklistedTokens.mu.Lock()
+// 	defer blacklistedTokens.mu.Unlock()
+// 	_, exists := blacklistedTokens.blacklist[token]
+// 	return exists
+// }

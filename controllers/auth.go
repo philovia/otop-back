@@ -67,7 +67,15 @@ func Login(c *fiber.Ctx) error {
 }
 
 func Logout(c *fiber.Ctx) error {
-	// Invalidate token logic can be added here if needed
-	// For now, we just return a success message
+	// 	// 	// token := c.Get("Authorization")
+	// 	// 	// if token == "" {
+	// 	// 	// 	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"message": "Missing token"})
+	// 	// 	// }
+	// 	// 	// if len(token) > 7 && token[:7] == "Bearer " {
+	// 	// 	// 	token = token[7:]
+	// 	// 	// }
+
+	// 	// 	// // utils.BlacklistToken(token)
+
 	return c.JSON(fiber.Map{"message": "Logged out successfully"})
 }

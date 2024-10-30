@@ -8,7 +8,7 @@ import (
 	"github.com/m/utils"
 )
 
-var tokenBlacklist = make(map[string]bool)
+// var tokenBlacklist = make(map[string]bool)
 
 func Authentication() fiber.Handler {
 	return func(c *fiber.Ctx) error {
@@ -28,12 +28,11 @@ func Authentication() fiber.Handler {
 			})
 		}
 
-		if _, exists := tokenBlacklist[tokenString]; exists {
-			log.Println("Unauthorized: Token is invalid (logged out)")
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"error": "Unauthorized, token is invalid",
-			})
-		}
+		// if _, exists := tokenBlacklist[tokenString]; exists {
+		// 	log.Println("Unauthorized: Token is invalid (logged out)")
+		// 	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+		// 		"error": "Unauthorized, token is invalid",
+		// 	})
 
 		claims, err := utils.ValidateToken(tokenString)
 		if err != nil {
@@ -42,6 +41,8 @@ func Authentication() fiber.Handler {
 				"error": "Unauthorized, invalid token",
 			})
 		}
+		log.Printf("Authenticated user: %s with role: %s", claims.Username, claims.Role)
+
 		c.Locals("username", claims.Username)
 		c.Locals("role", claims.Role)
 		c.Locals("userID", claims.UserID)
@@ -49,12 +50,28 @@ func Authentication() fiber.Handler {
 		return c.Next()
 	}
 }
+
 func Logout(c *fiber.Ctx) error {
 	authFormHeader := c.Get("Authorization")
-	tokenString := strings.TrimPrefix(authFormHeader, "Bearer ")
-	tokenBlacklist[tokenString] = true
+	if authFormHeader == "" {
+		log.Println("Logout failed: No token provided")
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "No token provided",
+		})
+	}
 
+	tokenString := strings.TrimPrefix(authFormHeader, "Bearer ")
+	if tokenString == "" {
+		log.Println("Logout failed: No token found in header")
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "No token found in header",
+		})
+	}
+
+	// Invalidate the token by adding it to the blacklist
+	// tokenBlacklist[tokenString] = true
 	log.Println("Token invalidated for logout:", tokenString)
+
 	return c.JSON(fiber.Map{"message": "Logged out successfully"})
 }
 
