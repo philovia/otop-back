@@ -58,7 +58,7 @@ func GetMyProducts(c *fiber.Ctx) error {
 }
 
 func UpdateProduct(c *fiber.Ctx) error {
-	id := c.Params("id")
+	id := c.Params("name")
 	var product models.Product
 
 	if err := database.DB.First(&product, id).Error; err != nil {
