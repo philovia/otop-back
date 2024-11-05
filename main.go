@@ -14,10 +14,6 @@ import (
 
 func main() {
 
-	if err := os.MkdirAll("uploads", os.ModePerm); err != nil {
-		log.Fatalf("Failed to create uploads directory: %v", err)
-	}
-
 	database.SetupDatabase()
 
 	if err := database.DB.AutoMigrate(&models.Supplier{}); err != nil {
@@ -35,7 +31,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8083"
+		port = "8096"
 	}
 
 	log.Fatal(app.Listen(":" + port))

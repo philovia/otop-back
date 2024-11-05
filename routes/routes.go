@@ -9,30 +9,30 @@ import (
 
 func UserRoutes(app *fiber.App) {
 
-	//  Public routes
-	app.Post("/api/register", controllers.Register)
-	app.Post("/api/login", controllers.Login)
+	app.Post("/register", controllers.Register)
+	app.Post("/login", controllers.UnifiedLogin)
+	app.Post("/logout", controllers.Logout)
 
-	app.Post("/logout", middleware.Authentication(), controllers.Logout)
-	// Protected routes
-	admin := app.Group("/admin", middleware.Authentication(), middleware.IsAdmin())
-	admin.Post("/supplier", controllers.CreateSupplier)
-	admin.Post("/login", controllers.SupplierLogin)
-	admin.Get("/suppliers", controllers.GetAllSuppliers)
-	admin.Get("/suppliers/email/:email", controllers.GetSupplierByEmail)
-	admin.Get("/suppliers/store_name/:storeName", controllers.GetSupplierByStoreName)
-	admin.Put("/suppliers/:id", controllers.UpdateSupplier)
-	admin.Delete("/supplier/:id", controllers.DeleteSupplier)
+	// Admin-only routes
+	supplier := app.Group("/supplier")
+	supplier.Use(middleware.JWTProtected)
+	supplier.Use(middleware.IsAdmin)
+	supplier.Post("/", controllers.CreateSupplier)
+	supplier.Get("/", controllers.GetSuppliers)
+	supplier.Get("/:storeName", controllers.GetSupplierByStoreName)
+	supplier.Put("/:storeName", controllers.UpdateSupplier)
+	supplier.Delete("/:storeName", controllers.DeleteSupplier)
 
-	// routes for the supplier
-	supplier := app.Group("/supplier", middleware.Authentication())
-	supplier.Post("/add/product", controllers.AddProduct)
-	supplier.Put("/update/product/:id", controllers.UpdateProduct)
-	supplier.Delete("/delete/product/:id", controllers.DeleteProduct)
-	supplier.Get("/products/name/:name", controllers.GetProductByName)
+	// Product management routes for suppliers
+	supplierRoutes := app.Group("/products", middleware.IsSupplier, middleware.JWTProtected)
+	supplierRoutes.Post("/", controllers.AddProduct)
+	supplierRoutes.Get("/", controllers.GetProducts)
+	supplierRoutes.Get("/:name", controllers.GetProductByName)
+	supplierRoutes.Put("/:name", controllers.UpdateProduct)
+	supplierRoutes.Delete("/:name", controllers.DeleteProduct)
 
-	// routes fpor the cashier
-	cashier := app.Group("/cashier", middleware.IsCashier())
-	cashier.Get("/products/:name", controllers.GetProductByName)
+	//for admin and cashier
+	app.Get("/api/products/total_quantity", controllers.GetTotalQuantity)
+	app.Get("/products/:name", middleware.JWTProtected, controllers.GetProductByName)
 
 }

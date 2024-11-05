@@ -23,7 +23,7 @@ func LoadEnv() {
 func SetupDatabase() {
 	LoadEnv()
 
-	dsn := "host=localhost port=5432 user=postgres dbname=postgres password=postgres"
+	dsn := "host=localhost port=5432 user=postgres dbname=Reggie_Macazar password=postgres"
 	var err error
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
