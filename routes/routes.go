@@ -9,18 +9,31 @@ import (
 
 func UserRoutes(app *fiber.App) {
 
-	//  Public routes
-	app.Post("/api/register", controllers.Register)
-	app.Post("/api/login", controllers.Login)
+	app.Post("/register", controllers.Register)
+	app.Post("/login", controllers.UnifiedLogin)
+	app.Post("/logout", controllers.Logout)
 
-	// Protected routes
-	api := app.Group("/api", middleware.Authentication()) // Use JWT middleware
+	// Admin-only routes
+	supplier := app.Group("/supplier")
+	supplier.Use(middleware.JWTProtected)
+	supplier.Use(middleware.IsAdmin)
+	supplier.Post("/", controllers.CreateSupplier)
+	supplier.Get("/", controllers.GetSuppliers)
+	supplier.Get("/:storeName", controllers.GetSupplierByStoreName)
+	supplier.Put("/:storeName", controllers.UpdateSupplier)
+	supplier.Delete("/:storeName", controllers.DeleteSupplier)
 
-	// Example protected routes (e.g., add/update products)
-	api.Post("/products", middleware.IsSupplier(), controllers.AddProduct)
-	// api.Get("/products", controllers.GetProducts)
-	// api.Put("/products/:id", controllers.UpdateProduct)
+	// Product management routes for suppliers
+	supplierRoutes := app.Group("/products", middleware.IsSupplier, middleware.JWTProtected)
+	supplierRoutes.Post("/", controllers.AddProduct)
+	supplierRoutes.Get("/", controllers.GetProducts)
+	supplierRoutes.Get("/:name", controllers.GetProductByName)
+	supplierRoutes.Put("/:name", controllers.UpdateProduct)
+	supplierRoutes.Delete("/:name", controllers.DeleteProduct)
 
-	// Logout route
-	api.Post("/logout", controllers.Logout) // Add this line
+	//for admin and cashier
+	app.Get("/api/products/total_quantity", controllers.GetTotalQuantity)
+	app.Get("/api/products/total_price", controllers.GetTotalPrice)
+	app.Get("/products/:name", middleware.JWTProtected, controllers.GetProductByName)
+
 }

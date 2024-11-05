@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -10,28 +9,24 @@ import (
 var jwtKey = []byte("your_secret_key")
 
 type Claims struct {
-	Username string `json:"username"`
+	UserName string `json:"user_name"`
 	Role     string `json:"role"`
-	UserID   uint   `json:"user_id"` // Add UserID field
+	ID       uint   `json:"id"`
 	jwt.RegisteredClaims
 }
 
-// GenerateJWT generates a new JWT token for a user with their username and role
-func GenerateJWT(username, role string, userID uint) (string, error) {
-	// Set expiration time for the token (24 hours)
+func GenerateToken(username string, role string, ID uint) (string, error) {
 	expirationTime := time.Now().Add(24 * time.Hour)
 
-	// Create the JWT claims, including the username and role
 	claims := &Claims{
-		Username: username,
+		UserName: username,
 		Role:     role,
-		UserID:   userID, // Set UserID
+		ID:       ID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 		},
 	}
 
-	// Create the token with the claims and signing method
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(jwtKey)
 	if err != nil {
@@ -41,36 +36,12 @@ func GenerateJWT(username, role string, userID uint) (string, error) {
 	return tokenString, nil
 }
 
-// ValidateToken validates a JWT token and returns the claims if valid
-func ValidateToken(tokenString string) (*Claims, error) {
-	claims := &Claims{}
+func ParseToken(tokenStr string) (*jwt.Token, error) {
+	if len(tokenStr) > 7 && tokenStr[:7] == "Bearer " {
+		tokenStr = tokenStr[7:]
+	}
 
-	// Parse the token with claims and the signing key
-	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+	return jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
 	})
-
-	// Handle token validation errors
-	if err != nil {
-		if err == jwt.ErrSignatureInvalid {
-			return nil, errors.New("invalid token signature")
-		}
-		return nil, errors.New("invalid token")
-	}
-
-	// Check if the token is valid
-	if !token.Valid {
-		return nil, errors.New("token is not valid")
-	}
-
-	return claims, nil
-}
-
-// ExtractRoleAndUsername extracts the role and username from a valid token
-func ExtractRoleAndUsername(tokenString string) (string, string, error) {
-	claims, err := ValidateToken(tokenString)
-	if err != nil {
-		return "", "", err
-	}
-	return claims.Role, claims.Username, nil
 }

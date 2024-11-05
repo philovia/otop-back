@@ -28,7 +28,7 @@ func SetupDatabase() {
 	LoadEnv() // Load environment variables from .env file
 
 	// Data source name (DSN) for connecting to PostgreSQL
-	dsn := "host=localhost port=5432 user=postgres dbname=InventoryDB password=postgres"
+	dsn := "host=localhost port=5432 user=postgres dbname=postgres password=postgres"
 
 	// Connect to the PostgreSQL database using GORM
 	var err error
@@ -40,5 +40,5 @@ func SetupDatabase() {
 	log.Println("Successfully connected to PostgreSQL using GORM")
 
 	// Auto-migrate the models
-	DB.AutoMigrate(&models.Product{}, &models.User{})
+	DB.AutoMigrate(&models.Product{}, &models.User{}, &models.Supplier{})
 }
