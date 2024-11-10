@@ -15,20 +15,29 @@ import (
 func AddProduct(c *fiber.Ctx) error {
 	var product models.Product
 
+	// Parse the JWT token and retrieve the supplier's ID
 	userToken := c.Locals("supplier").(*jwt.Token)
 	claims := userToken.Claims.(jwt.MapClaims)
 	supplierID := uint(claims["id"].(float64))
 
+	// Parse the product data from the request body
 	if err := c.BodyParser(&product); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid product data"})
 	}
 
-	if product.Name == "" || product.Price <= 0 || product.Quantity <= 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Name and Price are required"})
+	// Validate product data
+	if product.Name == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Product name is required"})
+	}
+	if product.Price <= 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Product price must be greater than zero"})
+	}
+	if product.Quantity <= 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Product quantity must be greater than zero"})
 	}
 
+	// Set the supplier ID and save the product
 	product.SupplierID = supplierID
-
 	if err := database.DB.Create(&product).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error saving product"})
 	}
@@ -138,7 +147,7 @@ func GetProductByName(c *fiber.Ctx) error {
 
 	return c.JSON(product)
 }
-
+// this get all the total stocks from the database which is needed to get update from the cashiers 
 func GetTotalQuantity(c *fiber.Ctx) error {
 	log.Println("Received request to calculate total quantity of products")
 
@@ -154,17 +163,4 @@ func GetTotalQuantity(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"total_quantity": totalQuantity})
 }
 
-func GetTotalPrice(c *fiber.Ctx) error {
-	log.Println("Received request to calculate total price of all products")
 
-	var totalPrice float64
-	err := database.DB.Model(&models.Product{}).Select("SUM(price * quantity)").Scan(&totalPrice).Error
-
-	if err != nil {
-		log.Println("Error calculating total price:", err)
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to calculate total price"})
-	}
-
-	log.Println("Total price calculated:", totalPrice)
-	return c.JSON(fiber.Map{"total_price": totalPrice})
-}

@@ -23,14 +23,11 @@ func LoadEnv() {
 	}
 }
 
-// SetupDatabase initializes the database connection using GORM
 func SetupDatabase() {
-	LoadEnv() // Load environment variables from .env file
+	LoadEnv()
 
-	// Data source name (DSN) for connecting to PostgreSQL
 	dsn := "host=localhost port=5432 user=postgres dbname=postgres password=postgres"
 
-	// Connect to the PostgreSQL database using GORM
 	var err error
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -39,6 +36,5 @@ func SetupDatabase() {
 
 	log.Println("Successfully connected to PostgreSQL using GORM")
 
-	// Auto-migrate the models
-	DB.AutoMigrate(&models.Product{}, &models.User{}, &models.Supplier{})
+	DB.AutoMigrate(&models.Product{}, &models.User{}, &models.Supplier{}, &models.Order{})
 }
