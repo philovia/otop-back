@@ -1,9 +1,7 @@
 package database
 
 import (
-	// "fmt"
 	"log"
-	// "os"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -15,7 +13,6 @@ import (
 
 var DB *gorm.DB
 
-// LoadEnv loads environment variables from .env file
 func LoadEnv() {
 	err := godotenv.Load()
 	if err != nil {
@@ -26,8 +23,12 @@ func LoadEnv() {
 func SetupDatabase() {
 	LoadEnv()
 
+<<<<<<< HEAD
 	dsn := "host=localhost port=5432 user=postgres dbname=postgres password=postgres"
 
+=======
+	dsn := "host=localhost port=5432 user=postgres dbname=Reggie_Macazar password=postgres"
+>>>>>>> 36cf5b4b0c38771a532201f6a055694672691442
 	var err error
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -36,5 +37,9 @@ func SetupDatabase() {
 
 	log.Println("Successfully connected to PostgreSQL using GORM")
 
+<<<<<<< HEAD
 	DB.AutoMigrate(&models.Product{}, &models.User{}, &models.Supplier{}, &models.Order{})
+=======
+	DB.AutoMigrate(&models.Product{}, &models.User{}, &models.Supplier{})
+>>>>>>> 36cf5b4b0c38771a532201f6a055694672691442
 }

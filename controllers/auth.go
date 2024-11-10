@@ -28,6 +28,7 @@ func Register(c *fiber.Ctx) error {
 }
 
 func UnifiedLogin(c *fiber.Ctx) error {
+<<<<<<< HEAD
 	var creds struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -68,6 +69,19 @@ func UnifiedLogin(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{"token": token, "role": storedUser.Role})
+=======
+	var supplierCreds models.Supplier
+	if err := c.BodyParser(&supplierCreds); err == nil && supplierCreds.StoreName != "" {
+		return SupplierLogin(c)
+	}
+
+	var userCreds models.User
+	if err := c.BodyParser(&userCreds); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid login data"})
+	}
+
+	return Login(c)
+>>>>>>> 36cf5b4b0c38771a532201f6a055694672691442
 }
 
 func Login(c *fiber.Ctx) error {
@@ -81,7 +95,11 @@ func Login(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "User not found"})
 	}
 
+<<<<<<< HEAD
 	token, err := utils.GenerateToken(storedUser.UserName, storedUser.Role, storedUser.ID, storedUser.ID)
+=======
+	token, err := utils.GenerateToken(storedUser.UserName, storedUser.Role, storedUser.ID)
+>>>>>>> 36cf5b4b0c38771a532201f6a055694672691442
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error generating token"})
 	}
@@ -102,7 +120,11 @@ func SupplierLogin(c *fiber.Ctx) error {
 	}
 
 	var storedSupplier models.Supplier
+<<<<<<< HEAD
 	if err := database.DB.Where("email = ?", creds.Email).First(&storedSupplier).Error; err != nil {
+=======
+	if err := database.DB.Where("store_name = ?", creds.StoreName).First(&storedSupplier).Error; err != nil {
+>>>>>>> 36cf5b4b0c38771a532201f6a055694672691442
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Supplier not found"})
 	}
 
@@ -110,7 +132,11 @@ func SupplierLogin(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Invalid credentials"})
 	}
 
+<<<<<<< HEAD
 	token, err := utils.GenerateToken(storedSupplier.StoreName, "supplier", storedSupplier.ID, storedSupplier.ID)
+=======
+	token, err := utils.GenerateToken(storedSupplier.StoreName, "supplier", storedSupplier.ID) // Make sure the ID field is available
+>>>>>>> 36cf5b4b0c38771a532201f6a055694672691442
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error generating token"})
 	}

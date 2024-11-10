@@ -32,10 +32,17 @@ func GetSupplierByStoreName(c *fiber.Ctx) error {
 }
 
 func UpdateSupplier(c *fiber.Ctx) error {
+<<<<<<< HEAD
 	storeName := c.Params("storeName")
 	var supplier models.Supplier
 
 	if err := database.DB.First(&supplier, storeName).Error; err != nil {
+=======
+	id := c.Params("storeName")
+	var supplier models.Supplier
+
+	if err := database.DB.First(&supplier, id).Error; err != nil {
+>>>>>>> 36cf5b4b0c38771a532201f6a055694672691442
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Supplier not found"})
 	}
 
@@ -48,9 +55,15 @@ func UpdateSupplier(c *fiber.Ctx) error {
 }
 
 func DeleteSupplier(c *fiber.Ctx) error {
+<<<<<<< HEAD
 	storeName := c.Params("storeName")
 	var supplier models.Supplier
 	if err := database.DB.First(&supplier, storeName).Error; err != nil {
+=======
+	id := c.Params("storeName")
+	var supplier models.Supplier
+	if err := database.DB.First(&supplier, id).Error; err != nil {
+>>>>>>> 36cf5b4b0c38771a532201f6a055694672691442
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Supplier not found"})
 	}
 

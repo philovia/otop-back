@@ -2,6 +2,10 @@ package middleware
 
 import (
 	// "os"÷\\\
+<<<<<<< HEAD
+=======
+
+>>>>>>> 36cf5b4b0c38771a532201f6a055694672691442
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -19,6 +23,7 @@ func JWTProtected(c *fiber.Ctx) error {
 	return c.Next()
 }
 func IsAdmin(c *fiber.Ctx) error {
+<<<<<<< HEAD
 	authHeader := c.Get("Authorization")
 	if authHeader == "" {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
@@ -45,8 +50,27 @@ func IsAdmin(c *fiber.Ctx) error {
 
 	// Return nil if the check passes
 	return nil
-}
+=======
+	userToken := c.Locals("user")
+	if userToken == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+	}
 
+	claims, ok := userToken.(*jwt.Token).Claims.(jwt.MapClaims)
+	if !ok || claims["role"] != "admin" {
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Forbidden"})
+	}
+
+	return c.Next()
+>>>>>>> 36cf5b4b0c38771a532201f6a055694672691442
+}
+func IsSupplier(c *fiber.Ctx) error {
+	authHeader := c.Get("Authorization")
+	if authHeader == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized access"})
+	}
+
+<<<<<<< HEAD
 func IsSupplier(c *fiber.Ctx) error {
 	// Retrieve the Authorization header
 	authHeader := c.Get("Authorization")
@@ -104,5 +128,23 @@ func IsCashier(c *fiber.Ctx) error {
 	}
 
 	c.Locals("cashier", userToken)
+=======
+	tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
+	userToken, err := utils.ParseToken(tokenStr)
+	if err != nil || !userToken.Valid {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+	}
+
+	claims, ok := userToken.Claims.(jwt.MapClaims)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+	}
+
+	if role, exists := claims["role"].(string); !exists || role != "supplier" {
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Forbidden"})
+	}
+
+	c.Locals("supplier", userToken)
+>>>>>>> 36cf5b4b0c38771a532201f6a055694672691442
 	return c.Next()
 }
